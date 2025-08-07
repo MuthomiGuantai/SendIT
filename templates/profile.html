@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - SendIT</title>
+    <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <a href="/"><img src="/static/logo.svg" alt="SendIT Logo" class="nav-logo"></a>
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/profile" class="active">Profile</a></li>
+            <li class="dropdown-container">
+                <span class="nav-username">{{ current_user.username }}</span>
+                <ul class="dropdown">
+                    <li><a href="/logout">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+    <div class="container">
+        <div class="card">
+            <h1>Hi, {{ current_user.username }}</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <h2>Edit Profile</h2>
+            <form method="POST">
+                {{ edit_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ edit_form.username.label(class="form-control-label") }}
+                    {{ edit_form.username(class="form-control", placeholder=" ", value=current_user.username) }}
+                    {% for error in edit_form.username.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ edit_form.email.label(class="form-control-label") }}
+                    {{ edit_form.email(class="form-control", placeholder=" ", value=current_user.email) }}
+                    {% for error in edit_form.email.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {{ edit_form.submit(class="btn btn-secondary") }}
+            </form>
+        </div>
+        <div class="card">
+            <h2>Your Parcels</h2>
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <h3>Delivered Parcels</h3>
+                    <p class="stat-number">{{ delivered }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>In Transit</h3>
+                    <p class="stat-number">{{ in_transit }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Parcels</h3>
+                    <p class="stat-number">{{ parcels|length }}</p>
+                </div>
+            </div>
+            <table class="parcel-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pickup</th>
+                        <th>Destination</th>
+                        <th>Weight</th>
+                        <th>Distance</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parcel in parcels %}
+                    <tr>
+                        <td>#{{ parcel.id }}</td>
+                        <td>{{ parcel.pickup }}</td>
+                        <td>{{ parcel.destination }}</td>
+                        <td>{{ parcel.weight }} kg</td>
+                        <td>{{ parcel.distance|default('N/A') }} km</td>
+                        <td>{{ parcel.cost|default('N/A')|int }} KES</td>
+                        <td>{{ parcel.status }}</td>
+                        <td>{{ parcel.created_at.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        document.querySelector('.hamburger').addEventListener('click', function() {
+            document.querySelector('.nav').classList.toggle('nav-open');
+        });
+        document.querySelector('.nav-username').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.querySelector('.dropdown');
+            dropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', function(e) {
+            const dropdown = document.querySelector('.dropdown');
+            if (!dropdown.contains(e.target) && !e.target.classList.contains('nav-username')) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

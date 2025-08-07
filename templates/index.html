@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendIT - Home</title>
+    <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|safe }}&libraries=places"></script>
+</head>
+<body>
+    <nav class="nav">
+        <a href="/"><img src="/static/logo.svg" alt="SendIT Logo" class="nav-logo"></a>
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/" class="active">Home</a></li>
+            <li><a href="/profile">Profile</a></li>
+            <li class="dropdown-container">
+                <span class="nav-username">{{ current_user.username }}</span>
+                <ul class="dropdown">
+                    <li><a href="/logout">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="card">
+            <h1>Create a Parcel</h1>
+            <form method="POST" id="parcel-form">
+                {{ form.hidden_tag() }}
+                <input type="hidden" id="distance" name="distance">
+                <div class="form-group">
+                    {{ form.pickup_location.label(class="form-control-label") }}
+                    {{ form.pickup_location(id="pickup", class="form-control", placeholder=" ") }}
+                    {% for error in form.pickup_location.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.destination.label(class="form-control-label") }}
+                    {{ form.destination(id="destination", class="form-control", placeholder=" ") }}
+                    {% for error in form.destination.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.weight.label(class="form-control-label") }}
+                    {{ form.weight(class="form-control", placeholder=" ") }}
+                    {% for error in form.weight.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-primary" onclick="calculateRoute()">Show Route</button>
+                {{ form.submit(class="btn btn-secondary") }}
+            </form>
+        </div>
+        <div id="map"></div>
+        <div id="travel-info" style="display: none;">
+            <p><strong>Distance:</strong> <span id="distance-text"></span></p>
+            <p><strong>Duration:</strong> <span id="duration"></span></p>
+            <p><strong>Estimated Cost:</strong> <span id="cost"></span></p>
+        </div>
+        <div class="card">
+            <h2>Your Parcels</h2>
+            <table class="parcel-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pickup</th>
+                        <th>Destination</th>
+                        <th>Weight</th>
+                        <th>Distance</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parcel in parcels %}
+                    <tr>
+                        <td>#{{ parcel.id }}</td>
+                        <td>{{ parcel.pickup }}</td>
+                        <td>{{ parcel.destination }}</td>
+                        <td>{{ parcel.weight }} kg</td>
+                        <td>{{ parcel.distance|default('N/A') }} km</td>
+                        <td>{{ parcel.cost|default('N/A')|int }} KES</td>
+                        <td>{{ parcel.status }}</td>
+                        <td>
+                            {% if parcel.status not in ['Delivered', 'Cancelled'] %}
+                            <form action="{{ url_for('change_destination', parcel_id=parcel.id) }}" method="POST" style="display:inline;">
+                                <input type="text" name="new_destination" placeholder="New Destination" class="form-control">
+                                <button type="submit" class="btn btn-primary btn-small">Update</button>
+                            </form>
+                            <form action="{{ url_for('cancel', parcel_id=parcel.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-small">Cancel</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        let map, directionsService, directionsRenderer;
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 0, lng: 0 },
+                zoom: 2,
+                styles: [
+                    { featureType: "all", elementType: "all", stylers: [{ saturation: -20 }, { lightness: 10 }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ hue: "#b794f4" }, { saturation: 20 }] }
+                ]
+            });
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                polylineOptions: { strokeColor: "#b794f4", strokeWeight: 5 }
+            });
+            directionsRenderer.setMap(map);
+            const pickupInput = document.getElementById('pickup');
+            const destinationInput = document.getElementById('destination');
+            new google.maps.places.Autocomplete(pickupInput);
+            new google.maps.places.Autocomplete(destinationInput);
+        }
+        function calculateRoute() {
+            const pickup = document.getElementById('pickup').value;
+            const destination = document.getElementById('destination').value;
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
+            if (!pickup || !destination) {
+                alert('Please enter pickup and destination locations.');
+                return;
+            }
+            directionsService.route({
+                origin: pickup,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status === google.maps.DirectionsStatus.OK) {
+                    directionsRenderer.setDirections(result);
+                    const route = result.routes[0].legs[0];
+                    new google.maps.Marker({
+                        position: route.start_location,
+                        map: map,
+                        label: { text: 'P', color: '#fff', fontWeight: 'bold' },
+                        icon: { url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' }
+                    });
+                    new google.maps.Marker({
+                        position: route.end_location,
+                        map: map,
+                        label: { text: 'D', color: '#fff', fontWeight: 'bold' },
+                        icon: { url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png' }
+                    });
+                    const distanceKm = route.distance.value / 1000;
+                    document.getElementById('distance').value = distanceKm;
+                    document.getElementById('distance-text').textContent = route.distance.text;
+                    document.getElementById('duration').textContent = route.duration.text;
+                    document.getElementById('cost').textContent = Math.round(distanceKm * weight * 0.5) + ' KES';
+                    document.getElementById('travel-info').style.display = 'block';
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend(route.start_location);
+                    bounds.extend(route.end_location);
+                    map.fitBounds(bounds, { padding: 50 });
+                } else {
+                    alert('Unable to find route: ' + status);
+                }
+            });
+        }
+        window.onload = function() {
+            initMap();
+            document.querySelector('.hamburger').addEventListener('click', function() {
+                document.querySelector('.nav').classList.toggle('nav-open');
+            });
+            document.querySelector('.nav-username').addEventListener('click', function(e) {
+                e.stopPropagation();
+                const dropdown = document.querySelector('.dropdown');
+                dropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', function(e) {
+                const dropdown = document.querySelector('.dropdown');
+                if (!dropdown.contains(e.target) && !e.target.classList.contains('nav-username')) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        };
+    </script>
+</body>
+</html>
