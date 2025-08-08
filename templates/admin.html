@@ -1,91 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - SendIT</title>
-    <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <nav class="nav">
-        <a href="/"><img src="/static/logo.svg" alt="SendIT Logo" class="nav-logo"></a>
-        <div class="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <ul class="nav-links">
-            <li><a href="/admin" class="active">Admin</a></li>
-            <li class="dropdown-container">
-                <span class="nav-username">{{ current_user.username }}</span>
-                <ul class="dropdown">
-                    <li><a href="/logout">Logout</a></li>
-                </ul>
-            </li>
-        </ul>
-    </nav>
-    <div class="container">
-        <div class="card">
-            <h1>Admin Dashboard</h1>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Admin Dashboard</h1>
+    <div class="card">
+        <form method="POST">
+            <table class="parcel-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pickup</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parcel in parcels %}
+                    <tr>
+                        <td>#{{ parcel.id }}</td>
+                        <td>{{ parcel.pickup }}</td>
+                        <td>{{ parcel.destination }}</td>
+                        <td>{{ parcel.status }}</td>
+                        <td>
+                            <input type="text" name="location_{{ parcel.id }}" value="{{ parcel.current_location or '' }}" class="form-control">
+                        </td>
+                        <td>
+                            <select name="status_{{ parcel.id }}" class="form-control" required>
+                                <option value="Pending" {% if parcel.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="In Transit" {% if parcel.status == 'In Transit' %}selected{% endif %}>In Transit</option>
+                                <option value="Delivered" {% if parcel.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                <option value="Cancelled" {% if parcel.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </td>
+                    </tr>
                     {% endfor %}
-                {% endif %}
-            {% endwith %}
-            <form method="POST">
-                <table class="parcel-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Pickup</th>
-                            <th>Destination</th>
-                            <th>Status</th>
-                            <th>Location</th>
-                            <th>Update</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for parcel in parcels %}
-                        <tr>
-                            <td>#{{ parcel.id }}</td>
-                            <td>{{ parcel.pickup }}</td>
-                            <td>{{ parcel.destination }}</td>
-                            <td>{{ parcel.status }}</td>
-                            <td><input type="text" name="location_{{ parcel.id }}" value="{{ parcel.current_location or '' }}" class="form-control"></td>
-                            <td>
-                                <select name="status_{{ parcel.id }}" class="form-control">
-                                    <option value="Pending" {% if parcel.status == 'Pending' %}selected{% endif %}>Pending</option>
-                                    <option value="In Transit" {% if parcel.status == 'In Transit' %}selected{% endif %}>In Transit</option>
-                                    <option value="Delivered" {% if parcel.status == 'Delivered' %}selected{% endif %}>Delivered</option>
-                                    <option value="Cancelled" {% if parcel.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
-                                </select>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <button type="submit" class="btn btn-secondary">Save Updates</button>
-            </form>
-        </div>
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-secondary">Save Updates</button>
+        </form>
     </div>
-    <script>
-        document.querySelector('.hamburger').addEventListener('click', function() {
-            document.querySelector('.nav').classList.toggle('nav-open');
-        });
-        document.querySelector('.nav-username').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const dropdown = document.querySelector('.dropdown');
-            dropdown.classList.toggle('show');
-        });
-        document.addEventListener('click', function(e) {
-            const dropdown = document.querySelector('.dropdown');
-            if (!dropdown.contains(e.target) && !e.target.classList.contains('nav-username')) {
-                dropdown.classList.remove('show');
-            }
-        });
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}

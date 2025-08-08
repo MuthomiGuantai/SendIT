@@ -1,0 +1,23 @@
+SendIT Parcel Notification
+
+Dear {{ username }},
+
+We have an update regarding your parcel with tracking number {{ tracking_number }}. Below are the details:
+
+Status: {{ status }}
+Pickup Location: {{ pickup }}
+Destination: {{ destination }}
+Weight: {{ weight }} kg
+Cost: {{ cost }} KES
+Current Location: {{ current_location }}
+Updated: {{ timestamp }}
+
+Track your parcel in real-time at: {{ url_for('track', _external=True) }}
+
+If you have any questions, contact our support team at support@sendit.com.
+
+Thank you,
+SendIT Team
+
+© 2025 SendIT. All rights reserved.
+Nairobi, Kenya

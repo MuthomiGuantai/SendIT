@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendIT Notification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0f4ff; font-family: 'Inter', sans-serif; color: #333333;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 20px rgba(107, 70, 193, 0.1);">
+        <tr>
+            <td style="padding: 20px; text-align: center;">
+                <img src="{{ url_for('static', filename='logo.svg', _external=True) }}" alt="SendIT Logo" style="max-height: 40px; display: block; margin: 0 auto;">
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 0 20px 20px;">
+                <h1 style="font-family: 'Montserrat', sans-serif; color: #6b46c1; font-size: 24px; font-weight: 700; margin-bottom: 20px; text-align: center;">Parcel Notification</h1>
+                <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">Dear {{ username }},</p>
+                <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">We have an update regarding your parcel with tracking number <strong>{{ tracking_number }}</strong>. Below are the details:</p>
+                <table role="presentation" width="100%" cellpadding="10" cellspacing="0" style="border-collapse: collapse; background-color: #f5f7ff; border-radius: 8px; margin-bottom: 20px;">
+                    <tr>
+                        <td style="font-size: 14px; font-weight: 600; color: #6b46c1; border-bottom: 1px solid #f0f4ff;">Status</td>
+                        <td style="font-size: 14px; color: #333333; border-bottom: 1px solid #f0f4ff;">{{ status }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; font-weight: 600; color: #6b46c1; border-bottom: 1px solid #f0f4ff;">Pickup Location</td>
+                        <td style="font-size: 14px; color: #333333; border-bottom: 1px solid #f0f4ff;">{{ pickup }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; font-weight: 600; color: #6b46c1; border-bottom: 1px solid #f0f4ff;">Destination</td>
+                        <td style="font-size: 14px; color: #333333; border-bottom: 1px solid #f0f4ff;">{{ destination }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; font-weight: 600; color: #6b46c1; border-bottom: 1px solid #f0f4ff;">Weight</td>
+                        <td style="font-size: 14px; color: #333333; border-bottom: 1px solid #f0f4ff;">{{ weight }} kg</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; font-weight: 600; color: #6b46c1; border-bottom: 1px solid #f0f4ff;">Cost</td>
+                        <td style="font-size: 14px; color: #333333; border-bottom: 1px solid #f0f4ff;">{{ cost }} KES</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; font-weight: 600; color: #6b46c1; border-bottom: 1px solid #f0f4ff;">Current Location</td>
+                        <td style="font-size: 14px; color: #333333; border-bottom: 1px solid #f0f4ff;">{{ current_location }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; font-weight: 600; color: #6b46c1;">Updated</td>
+                        <td style="font-size: 14px; color: #333333;">{{ timestamp }}</td>
+                    </tr>
+                </table>
+                <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">Track your parcel in real-time using the tracking number on our website:</p>
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto 20px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <a href="{{ url_for('track', _external=True) }}" style="display: inline-block; padding: 12px 24px; background-color: #FFC107; color: #6b46c1; font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; transition: background-color 0.3s;">Track Parcel</a>
+                        </td>
+                    </tr>
+                </table>
+                <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">If you have any questions, contact our support team at <a href="mailto:support@sendit.com" style="color: #6b46c1; text-decoration: none;">support@sendit.com</a>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px; background-color: #f5f7ff; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; text-align: center;">
+                <p style="font-size: 14px; color: #666666; margin-bottom: 10px;">&copy; 2025 SendIT. All rights reserved.</p>
+                <p style="font-size: 14px; color: #666666;">Nairobi, Kenya</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

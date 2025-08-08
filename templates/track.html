@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <h1>Track Your Parcel</h1>
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('track') }}">
+            <div class="form-group">
+                <input type="text" class="form-control" id="tracking_number" name="tracking_number" placeholder="Enter tracking number" required>
+                <label for="tracking_number" class="form-control-label">Tracking Number</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Track</button>
+        </form>
+    </div>
+
+    {% if parcel %}
+    <div class="card">
+        <h2>Parcel Details</h2>
+        <div class="track-details">
+            <p><strong>Tracking Number:</strong> {{ parcel.tracking_number }}</p>
+            <p><strong>Status:</strong> {{ parcel.status }}</p>
+            <p><strong>Current Location:</strong> {{ parcel.current_location or 'N/A' }}</p>
+            <p><strong>Pickup:</strong> {{ parcel.pickup }}</p>
+            <p><strong>Destination:</strong> {{ parcel.destination }}</p>
+            <p><strong>Weight:</strong> {{ parcel.weight }} kg</p>
+            <p><strong>Cost:</strong> {{ parcel.cost|default('N/A')|int }} KES</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Parcel Journey</h2>
+        <div class="timeline">
+            {% if parcel and parcel.tracking_history %}
+                {% for entry in parcel.tracking_history %}
+                <div class="timeline-item timeline-{{ entry.status.lower().replace(' ', '-') }} {% if loop.last %}current{% endif %}">
+                    <span class="timeline-icon">
+                        {% if entry.status == 'Pending' %}📍
+                        {% elif entry.status == 'In Transit' %}🚚
+                        {% elif entry.status == 'Delivered' %}✅
+                        {% elif entry.status == 'Cancelled' %}❌
+                        {% else %}⬤{% endif %}
+                    </span>
+                    <div class="timeline-content">
+                        <h3 class="timeline-status">{{ entry.status }}</h3>
+                        <p class="timeline-location">Location: {{ entry.location }}</p>
+                        <p class="timeline-timestamp">{{ entry.timestamp|datetimeformat }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No tracking history available.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+{# Custom Jinja filter for formatting timestamps #}
+{% macro datetimeformat(value) %}
+    {{ value.strftime("%Y-%m-%d %H:%M:%S") }}
+{% endmacro %}
+{% endblock %}

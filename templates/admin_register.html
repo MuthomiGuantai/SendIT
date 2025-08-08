@@ -1,90 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Register - SendIT</title>
-    <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <nav class="nav">
-        <a href="/"><img src="/static/logo.svg" alt="SendIT Logo" class="nav-logo"></a>
-        <div class="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <ul class="nav-links">
-            <li><a href="/admin">Admin</a></li>
-            <li class="dropdown-container">
-                <span class="nav-username">{{ current_user.username }}</span>
-                <ul class="dropdown">
-                    <li><a href="/logout">Logout</a></li>
-                </ul>
-            </li>
-        </ul>
-    </nav>
-    <div class="container">
-        <div class="card">
-            <h1>Register Admin</h1>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            <form method="POST">
-                {{ form.hidden_tag() }}
-                <div class="form-group">
-                    {{ form.username.label(class="form-control-label") }}
-                    {{ form.username(class="form-control", placeholder=" ") }}
-                    {% for error in form.username.errors %}
-                        <span class="error">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.email.label(class="form-control-label") }}
-                    {{ form.email(class="form-control", placeholder=" ") }}
-                    {% for error in form.email.errors %}
-                        <span class="error">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.password.label(class="form-control-label") }}
-                    {{ form.password(class="form-control", placeholder=" ") }}
-                    {% for error in form.password.errors %}
-                        <span class="error">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    {{ form.confirm_password.label(class="form-control-label") }}
-                    {{ form.confirm_password(class="form-control", placeholder=" ") }}
-                    {% for error in form.confirm_password.errors %}
-                        <span class="error">{{ error }}</span>
-                    {% endfor %}
-                </div>
-                {{ form.submit(class="btn btn-secondary") }}
-            </form>
-            <p class="border-top">Return to <a href="{{ url_for('admin') }}">Admin Dashboard</a>.</p>
-        </div>
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Register Admin</h1>
+    <div class="card">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.username.label(class="form-control-label") }}
+                {{ form.username(class="form-control", placeholder=" ") }}
+                {% for error in form.username.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.email.label(class="form-control-label") }}
+                {{ form.email(class="form-control", placeholder=" ") }}
+                {% for error in form.email.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.password.label(class="form-control-label") }}
+                {{ form.password(class="form-control", placeholder=" ") }}
+                {% for error in form.password.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.confirm_password.label(class="form-control-label") }}
+                {{ form.confirm_password(class="form-control", placeholder=" ") }}
+                {% for error in form.confirm_password.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            {{ form.submit(class="btn btn-secondary") }}
+        </form>
+        <p><a href="{{ url_for('admin') }}" class="btn btn-small btn-primary">Return to Admin Dashboard</a></p>
     </div>
-    <script>
-        document.querySelector('.hamburger').addEventListener('click', function() {
-            document.querySelector('.nav').classList.toggle('nav-open');
-        });
-        document.querySelector('.nav-username').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const dropdown = document.querySelector('.dropdown');
-            dropdown.classList.toggle('show');
-        });
-        document.addEventListener('click', function(e) {
-            const dropdown = document.querySelector('.dropdown');
-            if (!dropdown.contains(e.target) && !e.target.classList.contains('nav-username')) {
-                dropdown.classList.remove('show');
-            }
-        });
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}

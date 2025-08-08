@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendIT - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
+</head>
+<body class="light-theme">
+    <nav class="nav">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="SendIT Logo" class="nav-logo">
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>Home</a></li>
+            <li><a href="{{ url_for('track') }}" {% if request.endpoint == 'track' %}class="active"{% endif %}>Track</a></li>
+            {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('profile') }}" {% if request.endpoint == 'profile' %}class="active"{% endif %}>Profile</a></li>
+                {% if current_user.is_admin %}
+                    <li><a href="{{ url_for('admin') }}" {% if request.endpoint == 'admin' %}class="active"{% endif %}>Admin</a></li>
+                {% endif %}
+                <li>
+                    <span class="nav-username">{{ current_user.username }}</span>
+                    <ul class="dropdown">
+                        <li><a href="{{ url_for('profile') }}">Profile</a></li>
+                        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <button id="theme-toggle" class="btn btn-small btn-theme-toggle" title="Toggle Theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </li>
+            {% else %}
+                <li><a href="{{ url_for('login') }}" {% if request.endpoint == 'login' %}class="active"{% endif %}>Login</a></li>
+                <li><a href="{{ url_for('register') }}" {% if request.endpoint == 'register' %}class="active"{% endif %}>Register</a></li>
+                <li>
+                    <button id="theme-toggle" class="btn btn-small btn-theme-toggle" title="Toggle Theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </li>
+            {% endif %}
+        </ul>
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js"></script>
+    <script>
+        // Hamburger menu toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navLinks = document.querySelector('.nav-links');
+        hamburger.addEventListener('click', () => {
+            document.body.classList.toggle('nav-open');
+        });
+
+        // Dropdown toggle
+        const username = document.querySelector('.nav-username');
+        if (username) {
+            username.addEventListener('click', () => {
+                const dropdown = username.nextElementSibling;
+                dropdown.classList.toggle('show');
+            });
+        }
+
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = themeToggle ? themeToggle.querySelector('.theme-icon') : null;
+        if (themeToggle && themeIcon) {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            document.body.className = currentTheme + '-theme';
+            themeIcon.textContent = currentTheme === 'light' ? '🌙' : '☀️';
+
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.body.className.includes('light') ? 'dark' : 'light';
+                document.body.className = newTheme + '-theme';
+                themeIcon.textContent = newTheme === 'light' ? '🌙' : '☀️';
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
