@@ -287,7 +287,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Contact
 
-- Support: [support@sendit.com](mailto:support@sendit.com)
-- Project Maintainer: [Your Name]
+- Support: [support@sendit.com](mailto:muthomiguantai@gmail.com)
+- Project Maintainer: MUTHOMIGUANTAI
 
 © 2025 SendIT. All rights reserved. Nairobi, Kenya.
