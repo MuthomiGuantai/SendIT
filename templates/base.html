@@ -11,18 +11,18 @@
     <nav class="nav">
         <img src="{{ url_for('static', filename='logo.svg') }}" alt="SendIT Logo" class="nav-logo">
         <ul class="nav-links">
-            <li><a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>Home</a></li>
-            <li><a href="{{ url_for('track') }}" {% if request.endpoint == 'track' %}class="active"{% endif %}>Track</a></li>
+            <li><a href="{{ url_for('main.index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>Home</a></li>
+            <li><a href="{{ url_for('main.track') }}" {% if request.endpoint == 'track' %}class="active"{% endif %}>Track</a></li>
             {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('profile') }}" {% if request.endpoint == 'profile' %}class="active"{% endif %}>Profile</a></li>
+                <li><a href="{{ url_for('main.profile') }}" {% if request.endpoint == 'profile' %}class="active"{% endif %}>Profile</a></li>
                 {% if current_user.is_admin %}
-                    <li><a href="{{ url_for('admin') }}" {% if request.endpoint == 'admin' %}class="active"{% endif %}>Admin</a></li>
+                    <li><a href="{{ url_for('main.admin') }}" {% if request.endpoint == 'admin' %}class="active"{% endif %}>Admin</a></li>
                 {% endif %}
                 <li>
                     <span class="nav-username">{{ current_user.username }}</span>
                     <ul class="dropdown">
-                        <li><a href="{{ url_for('profile') }}">Profile</a></li>
-                        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                        <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
+                        <li><a href="{{ url_for('main.logout') }}">Logout</a></li>
                     </ul>
                 </li>
                 <li>
@@ -31,8 +31,8 @@
                     </button>
                 </li>
             {% else %}
-                <li><a href="{{ url_for('login') }}" {% if request.endpoint == 'login' %}class="active"{% endif %}>Login</a></li>
-                <li><a href="{{ url_for('register') }}" {% if request.endpoint == 'register' %}class="active"{% endif %}>Register</a></li>
+                <li><a href="{{ url_for('main.login') }}" {% if request.endpoint == 'login' %}class="active"{% endif %}>Login</a></li>
+                <li><a href="{{ url_for('main.register') }}" {% if request.endpoint == 'register' %}class="active"{% endif %}>Register</a></li>
                 <li>
                     <button id="theme-toggle" class="btn btn-small btn-theme-toggle" title="Toggle Theme">
                         <span class="theme-icon">🌙</span>

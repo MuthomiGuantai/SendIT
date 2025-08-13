@@ -4,7 +4,7 @@
     <h1>Track Your Parcel</h1>
 
     <div class="card">
-        <form method="POST" action="{{ url_for('track') }}">
+        <form method="POST" action="{{ url_for('main.track') }}">
             <div class="form-group">
                 <input type="text" class="form-control" id="tracking_number" name="tracking_number" placeholder="Enter tracking number" required>
                 <label for="tracking_number" class="form-control-label">Tracking Number</label>

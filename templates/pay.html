@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay for Parcel - SendIT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ session.get('theme', 'light') }}-mode">
+    {% include 'base.html' %}
+    <div class="container">
+        <h1>Pay for Parcel {{ parcel.tracking_number }}</h1>
+        <p>Amount: {{ parcel.cost }} KES</p>
+        <form method="POST" action="{{ url_for('pay', parcel_id=parcel.id) }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.phone_number.label }}
+                {{ form.phone_number(class="form-control", placeholder="2547XXXXXXXX") }}
+                {% if form.phone_number.errors %}
+                    {% for error in form.phone_number.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>

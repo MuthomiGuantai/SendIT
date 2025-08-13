@@ -30,6 +30,13 @@
             <button type="button" id="estimate-cost" class="btn btn-primary">Estimate Cost</button>
             {{ form.submit(class="btn btn-secondary") }}
         </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <div class="travel-info" id="travel-info" style="display: none;">
             <p>Distance: <span id="distance-text">0 km</span></p>
             <p>Weight: <span id="weight-text">0 kg</span></p>
@@ -50,6 +57,7 @@
                     <th>Distance</th>
                     <th>Cost</th>
                     <th>Status</th>
+                    <th>Payment Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -64,16 +72,28 @@
                     <td>{{ parcel.distance|default('N/A') }} km</td>
                     <td>{{ parcel.cost|default('N/A')|int }} KES</td>
                     <td>{{ parcel.status }}</td>
+                    <td>
+                        {% if payment_statuses[parcel.id] %}
+                            {{ payment_statuses[parcel.id].status|capitalize }}
+                        {% else %}
+                            Not Initiated
+                        {% endif %}
+                    </td>
                     <td class="actions">
                         {% if parcel.status not in ['Delivered', 'Cancelled'] %}
                         <div class="action-buttons">
-                            <form method="POST" action="{{ url_for('change_destination', parcel_id=parcel.id) }}">
+                            <form method="POST" action="{{ url_for('main.change_destination', parcel_id=parcel.id) }}">
                                 <input type="text" name="new_destination" placeholder="New destination" class="form-control">
                                 <button type="submit" class="btn btn-small btn-primary">Update</button>
                             </form>
-                            <form method="POST" action="{{ url_for('cancel', parcel_id=parcel.id) }}">
+                            <form method="POST" action="{{ url_for('main.cancel', parcel_id=parcel.id) }}">
                                 <button type="submit" class="btn btn-small btn-danger">Cancel</button>
                             </form>
+                            {% if parcel.status == 'Pending' and payment_statuses[parcel.id] and payment_statuses[parcel.id].status != 'completed' %}
+                                <a href="{{ url_for('pay', parcel_id=parcel.id) }}" class="btn btn-sm btn-success">Pay Now</a>
+                            {% elif parcel.status == 'Pending' and not payment_statuses[parcel.id] %}
+                                <a href="{{ url_for('pay', parcel_id=parcel.id) }}" class="btn btn-sm btn-success">Pay Now</a>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </td>
