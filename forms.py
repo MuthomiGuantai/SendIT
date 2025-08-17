@@ -1,7 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, FloatField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
-from models import User
+from wtforms.validators import DataRequired, Email, Length, EqualTo, Regexp
 
 class UserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=20)])
@@ -9,11 +8,6 @@ class UserForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
-
-    def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user:
-            raise ValidationError('That email is already in use.')
 
 class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=20)])
@@ -23,12 +17,6 @@ class EditUserForm(FlaskForm):
     def __init__(self, original_email, *args, **kwargs):
         super(EditUserForm, self).__init__(*args, **kwargs)
         self.original_email = original_email
-
-    def validate_email(self, email):
-        if email.data != self.original_email:
-            user = User.query.filter_by(email=email.data).first()
-            if user:
-                raise ValidationError('That email is already in use.')
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -47,3 +35,13 @@ class AdminRegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register Admin')
+
+class PaymentForm(FlaskForm):
+    phone_number = StringField(
+        'Phone Number',
+        validators=[
+            DataRequired(),
+            Regexp('^254[0-9]{9}$', message='Phone number must start with 254 and be 12 digits long (e.g., 254712345678).')
+        ]
+    )
+    submit = SubmitField('Pay with M-Pesa')

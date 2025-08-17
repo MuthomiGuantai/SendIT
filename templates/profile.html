@@ -49,6 +49,7 @@
                     <th>Distance</th>
                     <th>Cost</th>
                     <th>Status</th>
+                    <th>Payment Status</th>
                     <th>Created</th>
                 </tr>
             </thead>
@@ -62,6 +63,13 @@
                     <td>{{ parcel.distance|default('N/A') }} km</td>
                     <td>{{ parcel.cost|default('N/A')|int }} KES</td>
                     <td>{{ parcel.status }}</td>
+                    <td>
+                        {% if payment_statuses[parcel.id] %}
+                            {{ payment_statuses[parcel.id].status|capitalize }}
+                        {% else %}
+                            Not Initiated
+                        {% endif %}
+                    </td>
                     <td>{{ parcel.created_at.strftime('%Y-%m-%d') }}</td>
                 </tr>
                 {% endfor %}

@@ -44,6 +44,10 @@
                         <td style="font-size: 14px; color: #333333; border-bottom: 1px solid #f0f4ff;">{{ current_location }}</td>
                     </tr>
                     <tr>
+                        <td style="font-size: 14px; font-weight: 600; color: #6b46c1; border-bottom: 1px solid #f0f4ff;">Payment Status</td>
+                        <td style="font-size: 14px; color: #333333; border-bottom: 1px solid #f0f4ff;">{{ payment_status }}</td>
+                    </tr>
+                    <tr>
                         <td style="font-size: 14px; font-weight: 600; color: #6b46c1;">Updated</td>
                         <td style="font-size: 14px; color: #333333;">{{ timestamp }}</td>
                     </tr>
@@ -52,7 +56,7 @@
                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto 20px;">
                     <tr>
                         <td style="text-align: center;">
-                            <a href="{{ url_for('track', _external=True) }}" style="display: inline-block; padding: 12px 24px; background-color: #FFC107; color: #6b46c1; font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; transition: background-color 0.3s;">Track Parcel</a>
+                            <a href="{{ url_for('main.track', _external=True) }}" style="display: inline-block; padding: 12px 24px; background-color: #FFC107; color: #6b46c1; font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; transition: background-color 0.3s;">Track Parcel</a>
                         </td>
                     </tr>
                 </table>
