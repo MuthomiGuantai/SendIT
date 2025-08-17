@@ -23,3 +23,5 @@ class Parcel(db.Model):
     current_location = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    tracking_number = db.Column(db.String(16), unique=True, nullable=False)
+    tracking_history = db.Column(db.JSON, default=[])
