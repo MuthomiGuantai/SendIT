@@ -7,46 +7,47 @@
             {{ form.hidden_tag() }}
             <div class="form-group">
                 {{ form.pickup_location.label(class="form-control-label") }}
-                {{ form.pickup_location(id="pickup", class="form-control", placeholder="Enter pickup location") }}
+                {{ form.pickup_location(id="pickup", class="form-control", placeholder="Enter pickup location or use current location") }}
+                <button type="button" class="btn btn-primary mt-2" id="useCurrentLocation">Use Current Location</button>
                 {% for error in form.pickup_location.errors %}
-                    <span class="error">{{ error }}</span>
+                    <span class="error text-danger">{{ error }}</span>
                 {% endfor %}
             </div>
             <div class="form-group">
                 {{ form.destination.label(class="form-control-label") }}
                 {{ form.destination(id="destination", class="form-control", placeholder="Enter destination") }}
                 {% for error in form.destination.errors %}
-                    <span class="error">{{ error }}</span>
+                    <span class="error text-danger">{{ error }}</span>
                 {% endfor %}
             </div>
             <div class="form-group">
                 {{ form.weight.label(class="form-control-label") }}
                 {{ form.weight(id="weight", class="form-control", placeholder="Enter weight in kg") }}
                 {% for error in form.weight.errors %}
-                    <span class="error">{{ error }}</span>
+                    <span class="error text-danger">{{ error }}</span>
                 {% endfor %}
             </div>
             <input type="hidden" name="distance" id="distance">
             <button type="button" id="estimate-cost" class="btn btn-primary">Estimate Cost</button>
-            {{ form.submit(class="btn btn-secondary") }}
+            {{ form.submit(class="btn btn-secondary ms-2") }}
         </form>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        <div class="travel-info" id="travel-info" style="display: none;">
+        <div class="travel-info mt-3" id="travel-info" style="display: none;">
             <p>Distance: <span id="distance-text">0 km</span></p>
             <p>Weight: <span id="weight-text">0 kg</span></p>
             <p>Estimated Cost: <span id="cost-text">0 KES</span></p>
         </div>
     </div>
-    <div id="map"></div>
-    <div class="card">
+    <div id="map" style="height: 400px; width: 100%; margin-top: 20px;"></div>
+    <div class="card mt-4">
         <h2>Your Parcels</h2>
-        <table class="parcel-table">
+        <table class="parcel-table table table-striped">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -83,7 +84,7 @@
                         {% if parcel.status not in ['Delivered', 'Cancelled'] %}
                         <div class="action-buttons">
                             <form method="POST" action="{{ url_for('main.change_destination', parcel_id=parcel.id) }}">
-                                <input type="text" name="new_destination" placeholder="New destination" class="form-control">
+                                <input type="text" name="new_destination" placeholder="New destination" class="form-control d-inline-block" style="width: 150px;">
                                 <button type="submit" class="btn btn-small btn-primary">Update</button>
                             </form>
                             <form method="POST" action="{{ url_for('main.cancel', parcel_id=parcel.id) }}">
@@ -107,7 +108,7 @@
 <script>
     let map, directionsService, directionsRenderer;
 
-    // Initialize map
+    // Initialize map and autocomplete
     function initMap() {
         try {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -120,15 +121,51 @@
             const pickupInput = document.getElementById('pickup');
             const destinationInput = document.getElementById('destination');
             if (pickupInput && destinationInput) {
-                new google.maps.places.Autocomplete(pickupInput);
-                new google.maps.places.Autocomplete(destinationInput);
+                const autocompletePickup = new google.maps.places.Autocomplete(pickupInput, {
+                    types: ['geocode'],
+                    componentRestrictions: { country: 'ke' } // Restrict to Kenya
+                });
+                const autocompleteDestination = new google.maps.places.Autocomplete(destinationInput, {
+                    types: ['geocode'],
+                    componentRestrictions: { country: 'ke' }
+                });
+                // Trigger distance calculation on place selection
+                autocompletePickup.addListener('place_changed', calculateDistance);
+                autocompleteDestination.addListener('place_changed', calculateDistance);
             }
         } catch (error) {
             console.error('Map initialization failed:', error);
-            // Fallback: Retry after 1 second
             setTimeout(initMap, 1000);
         }
     }
+
+    // Fetch current location and reverse geocode
+    document.getElementById('useCurrentLocation').addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const geocoder = new google.maps.Geocoder();
+                    const latlng = { lat: lat, lng: lng };
+
+                    geocoder.geocode({ location: latlng }, (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            document.getElementById('pickup').value = results[0].formatted_address;
+                            calculateDistance(); // Trigger distance calculation
+                        } else {
+                            alert('Unable to fetch address: ' + status);
+                        }
+                    });
+                },
+                error => {
+                    alert('Geolocation error: ' + error.message);
+                }
+            );
+        } else {
+            alert('Geolocation is not supported by your browser.');
+        }
+    });
 
     // Ensure initMap is called after DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
