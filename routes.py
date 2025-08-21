@@ -11,10 +11,8 @@ import logging
 
 bp = Blueprint('main', __name__)
 
-
 def generate_tracking_number():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
-
 
 @bp.route('/', methods=['GET', 'POST'])
 @login_required
@@ -78,19 +76,20 @@ def index():
                                            current_location=parcel.current_location,
                                            timestamp=datetime.fromisoformat(
                                                parcel.tracking_history[-1]['timestamp']).strftime(
-                                               '%Y-%m-%d %H:%M:%S'))
+                                               '%Y-%m-%d %H:%M:%S'),
+                                           message_type='parcel_update')
                 try:
                     current_app.extensions['mail'].send(msg)
                 except Exception as e:
+                    current_app.logger.error(f'Failed to send parcel creation email for parcel {parcel.id}: {str(e)}')
                     flash(f'Failed to send email notification: {str(e)}', 'danger')
 
                 return redirect(url_for('pay', parcel_id=parcel.id))
         else:
             flash('Invalid form data. Please check your inputs.', 'danger')
 
-    return render_template('index.html', form=form, parcels=parcels, estimate=estimate,payment_statuses=payment_statuses,
+    return render_template('index.html', form=form, parcels=parcels, estimate=estimate, payment_statuses=payment_statuses,
                            google_maps_api_key=current_app.config['GOOGLE_MAPS_API_KEY'])
-
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -105,15 +104,29 @@ def register():
         user = User(
             username=form.username.data,
             email=form.email.data,
-            password=generate_password_hash(form.password.data, method='pbkdf2:sha256')
+            password=generate_password_hash(form.password.data, method='pbkdf2:sha256'),
+            created_at=datetime.utcnow()
         )
         current_app.db.session.add(user)
         current_app.db.session.commit()
-        flash('Registration successful! Please log in.', 'success')
+
+        # Send plain text registration confirmation email
+        msg = Message('Welcome to SendIT - Registration Confirmation',
+                      sender=current_app.config['MAIL_USERNAME'],
+                      recipients=[user.email])
+        msg.body = f"""Welcome to SendIT, {user.username}!
+Your registration is complete.
+Log in here: {url_for('main.login', _external=True)}"""
+        try:
+            current_app.extensions['mail'].send(msg)
+            flash('Registration successful! A confirmation email has been sent to your email address.', 'success')
+        except Exception as e:
+            current_app.logger.error(f'Failed to send registration email for {user.email}: {str(e)}')
+            flash(f'Registration successful, but failed to send confirmation email: {str(e)}', 'warning')
+
         return redirect(url_for('main.login'))
 
     return render_template('register.html', form=form)
-
 
 @bp.route('/admin/register', methods=['GET', 'POST'])
 @login_required
@@ -134,15 +147,29 @@ def admin_register():
             username=form.username.data,
             email=form.email.data,
             password=generate_password_hash(form.password.data, method='pbkdf2:sha256'),
-            is_admin=True
+            is_admin=True,
+            created_at=datetime.utcnow()
         )
         current_app.db.session.add(user)
         current_app.db.session.commit()
-        flash('Admin registered successfully.', 'success')
+
+        # Send plain text admin registration confirmation email
+        msg = Message('Welcome to SendIT - Admin Registration Confirmation',
+                      sender=current_app.config['MAIL_USERNAME'],
+                      recipients=[user.email])
+        msg.body = f"""Welcome to SendIT, {user.username}!
+Your admin registration is complete.
+Log in here: {url_for('main.login', _external=True)}"""
+        try:
+            current_app.extensions['mail'].send(msg)
+            flash('Admin registered successfully! A confirmation email has been sent to their email address.', 'success')
+        except Exception as e:
+            current_app.logger.error(f'Failed to send admin registration email for {user.email}: {str(e)}')
+            flash(f'Admin registered successfully, but failed to send confirmation email: {str(e)}', 'warning')
+
         return redirect(url_for('main.admin'))
 
     return render_template('admin_register.html', form=form)
-
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -160,14 +187,12 @@ def login():
 
     return render_template('login.html', form=form)
 
-
 @bp.route('/logout')
 @login_required
 def logout():
     logout_user()
     flash('Logged out successfully.', 'success')
     return redirect(url_for('main.login'))
-
 
 @bp.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -188,7 +213,7 @@ def profile():
         flash('Profile updated successfully.', 'success')
         return redirect(url_for('main.profile'))
 
-    parcels = Parcel.query.filter_by(user_id=current_user.id).all()
+    parcels = Parcel.query.filter_by(user_id=current_user.id).order_by(Parcel.created_at.desc()).limit(5).all()
     payment_statuses = {
         parcel.id: Payment.query.filter_by(parcel_id=parcel.id).first()
         for parcel in parcels
@@ -196,9 +221,31 @@ def profile():
     delivered = len([p for p in parcels if p.status == 'Delivered'])
     in_transit = len([p for p in parcels if p.status == 'In Transit'])
 
-    return render_template('profile.html', edit_form=edit_form, parcels=parcels,payment_statuses=payment_statuses,
-                           delivered=delivered, in_transit=in_transit)
+    total_spent = current_app.db.session.query(current_app.db.func.sum(Parcel.cost))\
+        .filter_by(user_id=current_user.id, status='Delivered')\
+        .scalar() or 0
 
+    notifications = []
+    for parcel in parcels:
+        payment = payment_statuses.get(parcel.id)
+        if parcel.status == 'Pending' and (not payment or payment.status != 'completed'):
+            notifications.append({
+                'message': f'Payment pending for parcel #{parcel.id} (Tracking: {parcel.tracking_number})',
+                'timestamp': datetime.utcnow()
+            })
+        if parcel.status == 'In Transit':
+            notifications.append({
+                'message': f'Parcel #{parcel.id} is in transit to {parcel.destination}',
+                'timestamp': parcel.tracking_history[-1]['timestamp']
+            })
+    if (datetime.utcnow() - current_user.created_at).days < 1:
+        notifications.append({
+            'message': 'Check your email for OTP verification if recently registered',
+            'timestamp': current_user.created_at
+        })
+
+    return render_template('profile.html', edit_form=edit_form, parcels=parcels, payment_statuses=payment_statuses,
+                           delivered=delivered, in_transit=in_transit, total_spent=total_spent, notifications=notifications)
 
 @bp.route('/admin', methods=['GET', 'POST'])
 @login_required
@@ -241,10 +288,12 @@ def admin():
                                                weight=parcel.weight,
                                                cost=parcel.cost,
                                                current_location=updated_location or 'N/A',
-                                               timestamp=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+                                               timestamp=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+                                               message_type='parcel_update')
                     try:
                         current_app.extensions['mail'].send(msg)
                     except Exception as e:
+                        current_app.logger.error(f'Failed to send parcel update email for parcel {parcel.id}: {str(e)}')
                         flash(f'Failed to send email notification: {str(e)}', 'danger')
 
         current_app.db.session.commit()
@@ -252,7 +301,6 @@ def admin():
         return redirect(url_for('main.admin'))
 
     return render_template('admin.html', parcels=parcels)
-
 
 @bp.route('/cancel/<int:parcel_id>', methods=['POST'])
 @login_required
@@ -283,16 +331,17 @@ def cancel(parcel_id):
                                weight=parcel.weight,
                                cost=parcel.cost,
                                current_location=parcel.current_location or 'N/A',
-                               timestamp=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+                               timestamp=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+                               message_type='parcel_update')
     try:
         current_app.extensions['mail'].send(msg)
     except Exception as e:
+        current_app.logger.error(f'Failed to send parcel cancellation email for parcel {parcel.id}: {str(e)}')
         flash(f'Failed to send email notification: {str(e)}', 'danger')
 
     current_app.db.session.commit()
     flash('Parcel cancelled.', 'success')
     return redirect(url_for('main.index'))
-
 
 @bp.route('/change_destination/<int:parcel_id>', methods=['POST'])
 @login_required
@@ -325,10 +374,12 @@ def change_destination(parcel_id):
                                    weight=parcel.weight,
                                    cost=parcel.cost,
                                    current_location=parcel.current_location or 'N/A',
-                                   timestamp=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+                                   timestamp=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+                                   message_type='parcel_update')
         try:
             current_app.extensions['mail'].send(msg)
         except Exception as e:
+            current_app.logger.error(f'Failed to send destination update email for parcel {parcel.id}: {str(e)}')
             flash(f'Failed to send email notification: {str(e)}', 'danger')
 
         current_app.db.session.commit()
@@ -337,7 +388,6 @@ def change_destination(parcel_id):
         flash('New destination required.', 'danger')
 
     return redirect(url_for('main.index'))
-
 
 @bp.route('/track', methods=['GET', 'POST'])
 def track():
@@ -351,4 +401,3 @@ def track():
         flash('Invalid tracking number.', 'danger')
 
     return render_template('track.html', parcel=None)
-

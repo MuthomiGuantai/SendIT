@@ -499,7 +499,7 @@
     </routine>
     <schema id="191" parent="1" name="main">
       <Current>1</Current>
-      <LastIntrospectionLocalTimestamp>2025-08-12.17:08:34</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2025-08-21.09:26:28</LastIntrospectionLocalTimestamp>
     </schema>
     <argument id="192" parent="16">
       <ArgumentDirection>R</ArgumentDirection>
@@ -1765,25 +1765,29 @@
       <Position>5</Position>
       <StoredType>BOOLEAN|0s</StoredType>
     </column>
-    <index id="595" parent="558" name="sqlite_autoindex_user_1">
+    <column id="595" parent="558" name="created_at">
+      <Position>6</Position>
+      <StoredType>DATETIME|0s</StoredType>
+    </column>
+    <index id="596" parent="558" name="sqlite_autoindex_user_1">
       <ColNames>username</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <Unique>1</Unique>
     </index>
-    <index id="596" parent="558" name="sqlite_autoindex_user_2">
+    <index id="597" parent="558" name="sqlite_autoindex_user_2">
       <ColNames>email</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <Unique>1</Unique>
     </index>
-    <key id="597" parent="558">
+    <key id="598" parent="558">
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <key id="598" parent="558">
+    <key id="599" parent="558">
       <ColNames>username</ColNames>
       <UnderlyingIndexName>sqlite_autoindex_user_1</UnderlyingIndexName>
     </key>
-    <key id="599" parent="558">
+    <key id="600" parent="558">
       <ColNames>email</ColNames>
       <UnderlyingIndexName>sqlite_autoindex_user_2</UnderlyingIndexName>
     </key>
