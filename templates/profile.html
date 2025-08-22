@@ -1,80 +1,161 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-    <h1>Hi, {{ current_user.username }}</h1>
-    <div class="card">
-        <h2>Edit Profile</h2>
-        <form method="POST">
-            {{ edit_form.hidden_tag() }}
-            <div class="form-group">
-                {{ edit_form.username.label(class="form-control-label") }}
-                {{ edit_form.username(class="form-control", placeholder=" ", value=current_user.username) }}
-                {% for error in edit_form.username.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <div class="form-group">
-                {{ edit_form.email.label(class="form-control-label") }}
-                {{ edit_form.email(class="form-control", placeholder=" ", value=current_user.email) }}
-                {% for error in edit_form.email.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            {{ edit_form.submit(class="btn btn-secondary") }}
-        </form>
-    </div>
-    <div class="card">
-        <h2>Your Parcels</h2>
-        <div class="profile-stats">
-            <div class="stat-card">
-                <h3>Delivered Parcels</h3>
-                <p class="stat-number">{{ delivered }}</p>
-            </div>
-            <div class="stat-card">
-                <h3>In Transit</h3>
-                <p class="stat-number">{{ in_transit }}</p>
-            </div>
-            <div class="stat-card">
-                <h3>Total Parcels</h3>
-                <p class="stat-number">{{ parcels|length }}</p>
+<div class="container mt-4">
+    <h1>Welcome, {{ current_user.username }}</h1>
+
+    <!-- Profile Details -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Profile Details</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>Username:</strong> {{ current_user.username }}</p>
+            <p><strong>Email:</strong> {{ current_user.email }}</p>
+            <p><strong>Registration Date:</strong> {{ current_user.created_at|datetimeformat }}</p>
+            <p><strong>Total Spent:</strong> {{ total_spent|default(0)|int }} KES</p>
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#editProfileForm" aria-expanded="false" aria-controls="editProfileForm">
+                Edit Profile
+            </button>
+            <div class="collapse mt-3" id="editProfileForm">
+                <form method="POST">
+                    {{ edit_form.hidden_tag() }}
+                    <div class="form-group mb-3">
+                        {{ edit_form.username.label(class="form-control-label") }}
+                        {{ edit_form.username(class="form-control", placeholder="Enter username", value=current_user.username) }}
+                        {% for error in edit_form.username.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group mb-3">
+                        {{ edit_form.email.label(class="form-control-label") }}
+                        {{ edit_form.email(class="form-control", placeholder="Enter email", value=current_user.email) }}
+                        {% for error in edit_form.email.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {{ edit_form.submit(class="btn btn-secondary") }}
+                </form>
             </div>
         </div>
-        <table class="parcel-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Pickup</th>
-                    <th>Destination</th>
-                    <th>Weight</th>
-                    <th>Distance</th>
-                    <th>Cost</th>
-                    <th>Status</th>
-                    <th>Payment Status</th>
-                    <th>Created</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for parcel in parcels %}
-                <tr>
-                    <td>#{{ parcel.id }}</td>
-                    <td>{{ parcel.pickup }}</td>
-                    <td>{{ parcel.destination }}</td>
-                    <td>{{ parcel.weight }} kg</td>
-                    <td>{{ parcel.distance|default('N/A') }} km</td>
-                    <td>{{ parcel.cost|default('N/A')|int }} KES</td>
-                    <td>{{ parcel.status }}</td>
-                    <td>
-                        {% if payment_statuses[parcel.id] %}
-                            {{ payment_statuses[parcel.id].status|capitalize }}
-                        {% else %}
-                            Not Initiated
-                        {% endif %}
-                    </td>
-                    <td>{{ parcel.created_at.strftime('%Y-%m-%d') }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
+
+    <!-- Notifications -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Notifications</h2>
+        </div>
+        <div class="card-body">
+            {% if notifications %}
+                <ul class="list-group">
+                    {% for notification in notifications %}
+                        <li class="list-group-item">{{ notification.message }} <small>({{ notification.timestamp|datetimeformat }})</small></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No notifications at this time.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Parcels -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Your Parcels</h2>
+        </div>
+        <div class="card-body">
+            <div class="profile-stats d-flex justify-content-around mb-4">
+                <div class="stat-card text-center p-3">
+                    <h3>Delivered Parcels</h3>
+                    <p class="stat-number">{{ delivered }}</p>
+                </div>
+                <div class="stat-card text-center p-3">
+                    <h3>In Transit</h3>
+                    <p class="stat-number">{{ in_transit }}</p>
+                </div>
+                <div class="stat-card text-center p-3">
+                    <h3>Total Parcels</h3>
+                    <p class="stat-number">{{ parcels|length }}</p>
+                </div>
+            </div>
+            <table class="parcel-table table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tracking Number</th>
+                        <th>Pickup</th>
+                        <th>Destination</th>
+                        <th>Weight</th>
+                        <th>Distance</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>Payment Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parcel in parcels %}
+                    <tr>
+                        <td>#{{ parcel.id }}</td>
+                        <td>{{ parcel.tracking_number }}</td>
+                        <td>{{ parcel.pickup }}</td>
+                        <td>{{ parcel.destination }}</td>
+                        <td>{{ parcel.weight }} kg</td>
+                        <td>{{ parcel.distance|default('N/A') }} km</td>
+                        <td>{{ parcel.cost|default('N/A')|int }} KES</td>
+                        <td>{{ parcel.status }}</td>
+                        <td>
+                            {% if payment_statuses[parcel.id] %}
+                                {{ payment_statuses[parcel.id].status|capitalize }}
+                            {% else %}
+                                Not Initiated
+                            {% endif %}
+                        </td>
+                        <td>{{ parcel.created_at|datetimeformat }}</td>
+                        <td class="actions">
+                            <a href="{{ url_for('main.track', tracking_number=parcel.tracking_number) }}" class="btn btn-sm btn-info">Track</a>
+                            {% if parcel.status == 'Pending' and (not payment_statuses[parcel.id] or payment_statuses[parcel.id].status != 'completed') %}
+                                <a href="{{ url_for('pay', parcel_id=parcel.id) }}" class="btn btn-sm btn-success">Pay Now</a>
+                            {% endif %}
+                            {% if parcel.status not in ['Delivered', 'Cancelled'] %}
+                                <form method="POST" action="{{ url_for('main.cancel', parcel_id=parcel.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                                </form>
+                                <!-- Modal for Change Destination -->
+                                <div class="modal fade" id="changeDestinationModal{{ parcel.id }}" tabindex="-1" aria-labelledby="changeDestinationLabel{{ parcel.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="changeDestinationLabel{{ parcel.id }}">Change Destination for Parcel #{{ parcel.id }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form method="POST" action="{{ url_for('main.change_destination', parcel_id=parcel.id) }}">
+                                                    <div class="mb-3">
+                                                        <input type="text" class="form-control" id="new_destination{{ parcel.id }}" name="new_destination" placeholder="Enter new destination" required>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">Update Destination</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 </div>
 {% endblock %}
