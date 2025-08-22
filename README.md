@@ -18,6 +18,7 @@ Deployed at: [https://sendit-74d3.onrender.com/](https://sendit-74d3.onrender.co
 - **Admin Dashboard**: Admins can update parcel statuses and view all parcels/users.
 - **Theme Toggle**: Switch between light and dark themes, persisted via local storage.
 - **Database**: SQLite (`sendit.db`) stores user and parcel data, including tracking history.
+- **Payments**: MPESA (`stk-push`) sends and stk push notification for customers to pay for their parcel cost.
 
 ## Tech Stack
 
@@ -64,6 +65,12 @@ Deployed at: [https://sendit-74d3.onrender.com/](https://sendit-74d3.onrender.co
      GOOGLE_MAPS_API_KEY=your_valid_google_maps_api_key_here
      MAIL_USERNAME=your_email@gmail.com
      MAIL_PASSWORD=your_app_password
+     MPESA_CALLBACK_URL=your_valid_mpesa_callback_url
+     MPESA_CONSUMER_KEY=your_valid_mpesa_consumer_key
+     MPESA_CONSUMER_SECRET=your_valid_mpesa_consumer_secret
+     MPESA_ENV=specify_your_mpesa_environment
+     MPESA_PASSKEY=your_mpesa_passkey
+     MPESA_SHORTCODE=a_valid_mpesa_shortcode
      ```
    - Obtain a Google Maps API Key from [Google Cloud Console](https://console.cloud.google.com/).
    - Generate a Gmail App Password at [Google Account Settings](https://myaccount.google.com/security).
@@ -142,6 +149,11 @@ sendit/
 5. **Theme Toggle**:
    - Click the theme toggle button (🌙/☀️) in the navbar to switch between light/dark modes.
 
+6. **Payment**:
+   - Create a parcel you will be routed to `/pay` enter phone number and proceed.
+   - An mpesa stk-push will pop up on your phone proceed to enter your mpesa pin and pay.
+   - You can also pay from your list of parcels in `/`, for an unpaid parcel there should be a `Pay Now` link that routes you to `/pay`.
+
 ## Deployment
 
 The application is deployed on Render at [https://sendit-74d3.onrender.com/](https://sendit-74d3.onrender.com/).
@@ -168,6 +180,12 @@ The application is deployed on Render at [https://sendit-74d3.onrender.com/](htt
      GOOGLE_MAPS_API_KEY
      MAIL_USERNAME
      MAIL_PASSWORD
+     MPESA_CALLBACK_URL
+     MPESA_CONSUMER_KEY
+     MPESA_CONSUMER_SECRET
+     MPESA_ENV
+     MPESA_PASSKEY
+     MPESA_SHORTCODE
      ```
 
 3. **Generate `requirements.txt`**:
