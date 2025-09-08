@@ -2,7 +2,7 @@
 
 ![SendIT Logo](static/logo.svg)
 
-SendIT is a Flask-based web application inspired by DHL and Sendy, designed for parcel delivery management. It allows users to create, track, and manage parcels with real-time updates, cost estimation, and email notifications. The application features a responsive UI with a purple/yellow color scheme (`#6b46c1`, `#805ad5`, `#b794f4`, `#f0f4ff`, `#FFC107`) and Inter/Montserrat fonts, ensuring a modern and user-friendly experience.
+SendIT is a Flask-based web application inspired by DHL and Sendy, designed for parcel delivery management. It allows users to create, track, and manage parcels with real-time updates, cost estimation, email notifications and parcel payments. 
 
 Deployed at: [https://sendit-74d3.onrender.com/](https://sendit-74d3.onrender.com/)
 
